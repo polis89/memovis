@@ -28,6 +28,19 @@
   color: #61dafb;
 }
 
+.logo {
+  float: left;
+  margin: 0px 24px 0px 0;
+  color: #fff;
+  font-weight: bold;
+  font-size: 30px;
+}
+
+.site-layout-content {
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
