@@ -6,10 +6,12 @@ export const useMemesData = () => {
     const [data, setData] = useState(null);
     
     useEffect(() => {
-        d3.csv('./data_filtered.csv').then((data) => {
-            console.log('data', data);
+        d3.csv('./data_filtered.csv').then(data => {
             setIsLoading(false);
-            setData(data);
+            setData(data.map(d => ({
+                ...d,
+                labels: JSON.parse(d.labels.replace(/\['(.*?)',/g, '["$1",'))
+            })));
         });
     }, [])
 
