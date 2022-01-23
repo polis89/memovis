@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useMemo } from 'react'
 import * as d3 from 'd3'
 import * as d3sankey from 'd3-sankey'
-import { pluck, flatten, uniq, clone } from 'ramda'
+import { pluck, flatten, uniq, clone, identity } from 'ramda'
 
 const width = "1000"
 const minHeightProCluster = "20"
@@ -16,7 +16,10 @@ const linkColor = "source-target"
 
 const SankeyChart = ({
     data,
-    selector
+    selectedCluster,
+    selectedLabel,
+    onClusterClick = identity,
+    onLabelClick = identity
 }) => {
     const nodesContainer = useRef(null);
     const linksContainer = useRef(null);
@@ -25,15 +28,18 @@ const SankeyChart = ({
 
     const uniqLabels = uniq(pluck(0, pluck('labels', flatten(pluck(1, data))).flat()))
 
-    const clusterNodes = data.map(d => ({id: `cluster_${d[0]}`}))
-    const labelNodes = uniqLabels.map(d=> ({id: `label_${d}`}))
-    
+    let clusterNodes = data.map(d => ({id: `cluster_${d[0]}`, cluster_id: d[0]}))
+    let labelNodes = uniqLabels.map(d=> ({
+        id: `label_${d}`,
+        label: d
+    }))
+
     const allNodes = [
         ...clusterNodes,
         ...labelNodes
     ]
 
-    const allLinks = data.map(cluster => {
+    const allLinks = useMemo(() => data.map(cluster => {
         const cluster_id =`cluster_${cluster[0]}`;
         const cluster_size = cluster[1].length;
         const cluster_labels = {};
@@ -51,34 +57,47 @@ const SankeyChart = ({
         return Object.entries(cluster_labels).map(entry => {
             return {
                 source: cluster_id,
+                cluster_id: cluster[0],
                 target: `label_${entry[0]}`,
+                label_id: entry[0],
                 value: 10 * cluster_size * entry[1] / cluster_labels_sum
             }
         })
-    }).flat(1)
+        }).flat(1),
+        [data]
+    )
 
-    console.log('nodes', allNodes);
+    if (selectedCluster) {
+        clusterNodes = clusterNodes.filter(n => n.cluster_id === selectedCluster)
+        labelNodes = uniq(
+            allLinks
+                .filter(l => l.cluster_id === selectedCluster)
+                .map(l => ({
+                    id: l.target,
+                    label: l.label_id 
+                })))
+    } else if (selectedLabel) {
+        labelNodes = labelNodes.filter(n => n.label === selectedLabel)
+    }
+    
+    const filteredNodes = [
+        ...clusterNodes,
+        ...labelNodes
+    ]
+
+    let filteredLinks = allLinks;
+    
+    if (selectedCluster) {
+        filteredLinks = allLinks.filter(l => l.cluster_id === selectedCluster)
+    } else if (selectedLabel) {
+        filteredLinks = allLinks.filter(l => l.label_id === selectedLabel)
+    }
+
         
     const colorScale = d3.scaleOrdinal().range(d3.schemePaired).domain(allNodes.map(d => d.id));
 
-    // const svg = d3.select(selector)
-    //     .append('svg')
-    //     .attr('width', width)
-    //     .attr('height', fullHeight)
-    //     .attr('viewBox', [0,0,width,fullHeight])
-    //     .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
-
-    // svg.append("g")
-    //     .classed('nodes-container', true)
-        
-    // svg.append("g")
-    //     .classed('link-container', true)
-    //     .attr("fill", "none")
-    //     .attr("stroke-opacity", 0.5)
-        
-
-    const updateSankeyChart = (nodes, links, isSingleNode) => {
-        const height = isSingleNode ? singleNodeHeight : fullHeight
+    const updateSankeyChart = (nodes, links) => {
+        const height = selectedCluster ? singleNodeHeight : fullHeight
 
         const sankeyGenerator = d3sankey.sankey()
           .nodeId(d => d.id)
@@ -106,38 +125,11 @@ const SankeyChart = ({
             .attr('fill', d => colorScale(d.id))
             .attr('title', d => d.id)
             .on('click', (e, d) => {
-                let new_nodes = []
-                let new_links = []
-                let isSingleNode = true
-
-                if (d.id.startsWith('cluster')) {
-                    if (nodes.filter(n => n.id.startsWith('cluster')).length === 1) {
-                        new_links = allLinks
-                        new_nodes = allNodes
-                        isSingleNode = false
-                    } else {
-                        new_links = allLinks.filter(l => l.source === d.id)
-                        const new_label_nodes = uniq(new_links.map(l => l.target)).map(l => ({id: l}))
-                        console.log('new_label_nodes', new_label_nodes);
-                        
-                        
-                        new_nodes = [
-                            { id: d.id },
-                            ...new_label_nodes
-                        ]
-                    }
-                } else {
-                    if (nodes.filter(n => n.id.startsWith('label_')).length === 1) {
-                        new_links = allLinks
-                        new_nodes = allNodes
-                        isSingleNode = false
-                    } else {
-                        new_links = allLinks.filter(l => l.target === d.id)
-                        new_nodes = [...clusterNodes, { id: d.id }]
-                    }
+                if (d.cluster_id) {
+                    onClusterClick(d.cluster_id)
+                } else if (d.label) {
+                    onLabelClick(d.label)
                 }
-
-                updateSankeyChart(clone(new_nodes),clone(new_links), isSingleNode)
             });
     
         d3.select(nodesContainer.current)
@@ -154,9 +146,6 @@ const SankeyChart = ({
                 const height = d3.select(this).node().getBoundingClientRect().height
                 d3.select(this).style('opacity', height > d.y1-d.y0 ? 0 : 1)
             })
-    
-        console.log('links', links);
-        
     
         d3.select(linksContainer.current)
             .selectAll("linearGradient")
@@ -185,8 +174,8 @@ const SankeyChart = ({
     }
 
     useEffect(() => {
-            updateSankeyChart(clone(allNodes),clone(allLinks), false);
-    }, [allNodes, allLinks])
+            updateSankeyChart(clone(filteredNodes),clone(filteredLinks), false);
+    }, [filteredNodes, filteredLinks])
 
 
     return <div>

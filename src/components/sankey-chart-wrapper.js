@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useMemesData } from '../hooks/useMemesData';
 import SankeyChart from './sankey-chart'
 import * as d3 from 'd3'
@@ -7,6 +7,8 @@ import { SettingOutlined } from '@ant-design/icons'
 const SankeyChartWrapper = () => {
     const { isLoading, data } = useMemesData();
     const groupedData = useMemo(() => data ? d3.groups(data, d => d.cluster) : null, [data]);
+    const [selectedCluster, setSelectedCluster] = useState(null)
+    const [selectedLabel, setSelectedLabel] = useState(null)
 
     if (isLoading) {
         return <div className='loadingContainer'>
@@ -21,7 +23,19 @@ const SankeyChartWrapper = () => {
     }
 
 
-    return <SankeyChart data={groupedData} />
+    return <SankeyChart
+        data={groupedData}
+        selectedCluster={selectedCluster}
+        onClusterClick={cluster => {
+            setSelectedLabel(null)
+            setSelectedCluster(cluster === selectedCluster ? null : cluster)
+        }}
+        selectedLabel={selectedLabel}
+        onLabelClick={label => {
+            setSelectedCluster(null)
+            setSelectedLabel(label === selectedLabel ? null : label)
+        }}
+    />
 }
 
 export default SankeyChartWrapper
