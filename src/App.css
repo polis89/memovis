@@ -69,6 +69,15 @@
   margin: -16px -16px -16px -16px;
 }
 
+.switch-container span {
+  display: inline-block;
+  margin-right: 10px;
+  font-size: 18px;
+  position: relative;
+  top: 2px;
+  font-weight: 700;
+}
+
 
 @keyframes App-logo-spin {
   from {

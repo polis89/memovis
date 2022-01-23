@@ -1,80 +1,36 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useMemesData } from '../hooks/useMemesData';
 import { SettingOutlined } from '@ant-design/icons'
 import * as d3 from 'd3'
-import ForceGraph from '../visualizatons/force-graph'
+import ForceGraph from './force-graph'
+import { Switch } from 'antd'
 
-const Topology = () => {
-    const chartContainer = useRef(null);
+const TopologyGrouped = () => {
     const { isLoading, data } = useMemesData();
+    const [ isLinksVisible, setIsLinksVisible ] = useState(true);
 
-    let chart;
+    const graph = useMemo(() => {
+        if (!data) return null
 
-    if (data) {
         const groupedData = d3.groups(data, d => d.cluster)
-    
-        const clusterCenterNodes = groupedData.map(group => {
-            const labels = {}
-            group[1].forEach(node => {
-                node.labels.forEach(label => {
-                    if (labels[label[0]]) {
-                        labels[label[0]].count += label[1]
-                    } else {
-                        labels[label[0]] = {
-                            name: label[0],
-                            count: label[1]
-                        }
-                    }
-                })
-            })
-            const sortedLabels = d3.sort(Object.values(labels), (a,b) => d3.descending(a.count, b.count))
-            return {
-                id: `cluster-${group[0]}`,
-                group: 'cluser-center',
-                count: group[1].length,
-                labels: sortedLabels.slice(0,5)
+
+        const graphLinks = groupedData.map(group => {
+            const groupLinks = []
+            for (let i = 0; i < group[1].length - 1; i++) {
+                for (let j = i + 1; j < group[1].length; j++) {
+                    groupLinks.push({
+                        source: group[1][i].id,
+                        target: group[1][j].id
+                    })
+                }
             }
-        })
-        const dataEntriesNodes = data.map((d, i) => {
-            return {
-                ...d,
-                id: `node-${i}`,
-                group: 'node'
-            }
-        })
-    
-        const dataLinks = data.map((d, i) => {
-            return {
-                source: `node-${i}`,
-                target: `cluster-${d.cluster}`
-            }
-        })
-        const graph = {
-            nodes: [
-                ...clusterCenterNodes,
-                ...dataEntriesNodes
-            ],
-            links: [...dataLinks]
+            return groupLinks
+        }).flat(1)
+        return {
+            nodes: [...data],
+            links: [...graphLinks]
         }
-        
-        chart = ForceGraph(graph, {
-            nodeId: d => d.id,
-            nodeGroup: d => d.group,
-            nodeTitle: d => d.labels ? `${d.labels}` : `${d.id}`,
-            width: 1000,
-            height: 800,
-            // nodeStrength: -3
-        })  
-    }
-    
-    // useEffect(() => {
-    //     console.log('chart', chart);
-        
-    //     if (data && chart) {
-    //         chartContainer.current.innerHTML = "";
-    //         chartContainer.current.appendChild(chart);
-    //     }
-    // }, [chart]);
+    }, [data])
 
     if (isLoading) {
         return <div className='loadingContainer'>
@@ -88,7 +44,24 @@ const Topology = () => {
         </div>
     }
 
-    return <div ref={chartContainer}>TODO</div>
+    console.log('isLinksVisible', isLinksVisible);
+    
+
+    return <React.Fragment>
+        <div className='switch-container'>
+            <span>
+                Show links
+            </span>
+            <Switch defaultChecked={isLinksVisible} checked={isLinksVisible} onChange={setIsLinksVisible} />
+        </div>
+        <ForceGraph
+            nodes={graph.nodes}
+            links={graph.links}
+            nodeGroup={d => d.cluster}
+            nodeTitle={d => d.labels ? `${d.labels}` : `${d.id}`}
+            isLinksVisible={isLinksVisible}
+            skipAnimation />
+    </React.Fragment>
 }
 
-export default Topology;
+export default TopologyGrouped;

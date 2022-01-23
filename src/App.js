@@ -33,7 +33,7 @@ const App = () => {
           </Menu.Item>
           <Menu.Item key={'/topologyGrouped'}>
             <Link to="/topologyGrouped">
-              Topology Grouped
+              Topology with Centers
             </Link>
           </Menu.Item>
           <Menu.Item key={'/sankey'}>

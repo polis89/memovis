@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import { SettingOutlined } from '@ant-design/icons'
 
 const intern = value => {
     return value !== null && typeof value === "object" ? value.valueOf() : value;
@@ -26,12 +27,16 @@ const ForceGraph = ({
     linkSource = ({source}) => source, // given d in links, returns a node identifier string
     linkTarget = ({target}) => target, // given d in links, returns a node identifier string
     colors = d3.schemeTableau10, // an array of color strings, for the node groups
-    invalidation // when this promise resolves, stop the simulation
+    invalidation, // when this promise resolves, stop the simulation
+    skipAnimation,
+    isLinksVisible
 }) => {
     const linkContainerRef = useRef(null)
     const nodeContainerRef = useRef(null)
     const tooltipContainerRef = useRef(null)
     const svgRef = useRef(null)
+
+    const [isLoading, setIsLoading] = useState(skipAnimation ? true : false)
 
     const updateChart = () => {
         // Compute values.
@@ -75,7 +80,13 @@ const ForceGraph = ({
             .force("charge", forceNode)
             .force("x", d3.forceX())
             .force("y", d3.forceY())
-            .on("tick", ticked)
+            .on("tick", skipAnimation ? null : ticked)
+            .on("end", () => {
+                if (skipAnimation) {
+                    ticked();
+                    setIsLoading(false)
+                }
+            })
             // .on("end", () => updateImages(svg));
   
         const link = d3.select(linkContainerRef.current)
@@ -117,7 +128,7 @@ const ForceGraph = ({
                         .style('top', `${event.offsetY}px`)
                         .style('left', `${event.offsetX}px`)
                         .attr('src', d.filename)
-                } else {
+                } else if (d.group === 'cluster') {
                     const cont = tooltipContainer.append('div').classed('tooltip',true)
                         .style('width', '140px')
                         .style('background', '#aaa')
@@ -170,7 +181,17 @@ const ForceGraph = ({
         updateChart()
     }, [nodes, links])
 
+    useEffect(() => {
+        d3.select(linkContainerRef.current).style('opacity', isLinksVisible ? 1 : 0)
+    }, [isLinksVisible])
+
     return <div className='viz-container'>
+        {
+            isLoading &&
+            <div className='loadingContainer'>
+                <SettingOutlined spin/>
+            </div>
+        }
         <div ref={tooltipContainerRef} className='tooltip-container' style={{position: 'relative'}}></div>
         <svg
             ref={svgRef}
@@ -179,7 +200,8 @@ const ForceGraph = ({
             viewBox={[-width / 2, -height / 2, width, height]}
             style={{
                 maxWidth: '100%',
-                height: 'intrinsic'
+                height: 'intrinsic',
+                opacity: isLoading ? 0 : 1 
             }}>
             <g
                 ref={linkContainerRef}
