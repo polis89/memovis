@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMemesData } from './useMemesData';
+import { useMemesData } from '../hooks/useMemesData';
 import { SettingOutlined } from '@ant-design/icons'
 import { Table, Popover } from 'antd'
 

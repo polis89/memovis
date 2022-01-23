@@ -2,8 +2,10 @@ import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import { Layout, Menu } from 'antd';
 import 'antd/dist/antd.css';
 import './App.css';
-import Explore from './explore'
-import Topology from "./topology-1";
+import Explore from './components/explore'
+import Topology from "./components/topology";
+import TopologyGrouped from "./components/topologyGrouped";
+import SankeyChartWrapper from "./components/sankey-chart-wrapper";
 
 const { Header, Content, Footer } = Layout;
 
@@ -26,7 +28,17 @@ const App = () => {
           </Menu.Item>
           <Menu.Item key={'/topology'}>
             <Link to="/topology">
-              Graph Topology
+              Topology
+            </Link>
+          </Menu.Item>
+          <Menu.Item key={'/topologyGrouped'}>
+            <Link to="/topologyGrouped">
+              Topology Grouped
+            </Link>
+          </Menu.Item>
+          <Menu.Item key={'/sankey'}>
+            <Link to="/sankey">
+              Sankey Chart
             </Link>
           </Menu.Item>
         </Menu>
@@ -37,6 +49,8 @@ const App = () => {
             <Route exact path="/" element={<Navigate to="/explore" />} />
             <Route path="explore" element={<Explore />} />
             <Route path="topology" element={<Topology />} />
+            <Route path="topologyGrouped" element={<TopologyGrouped />} />
+            <Route path="sankey" element={<SankeyChartWrapper />} />
           </Routes>
         </div>
       </Content>
