@@ -29,7 +29,7 @@ const ForceGraph = ({
     colors = d3.schemeTableau10, // an array of color strings, for the node groups
     invalidation, // when this promise resolves, stop the simulation
     skipAnimation,
-    isLinksVisible
+    isLinksVisible = true
 }) => {
     const linkContainerRef = useRef(null)
     const nodeContainerRef = useRef(null)
