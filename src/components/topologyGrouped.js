@@ -1,16 +1,15 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useMemesData } from '../hooks/useMemesData';
 import { SettingOutlined } from '@ant-design/icons'
 import * as d3 from 'd3'
-import ForceGraph from '../visualizatons/force-graph'
+import ForceGraph from './force-graph'
 
 const TopologyGrouped = () => {
-    const chartContainer = useRef(null);
     const { isLoading, data } = useMemesData();
 
-    let chart;
+    const graph = useMemo(() => {
+        if (!data) return null
 
-    if (data) {
         const groupedData = d3.groups(data, d => d.cluster)
     
         const clusterCenterNodes = groupedData.map(group => {
@@ -49,32 +48,14 @@ const TopologyGrouped = () => {
                 target: `cluster-${d.cluster}`
             }
         })
-        const graph = {
+        return {
             nodes: [
                 ...clusterCenterNodes,
                 ...dataEntriesNodes
             ],
             links: [...dataLinks]
         }
-        
-        chart = ForceGraph(graph, {
-            nodeId: d => d.id,
-            nodeGroup: d => d.group,
-            nodeTitle: d => d.labels ? `${d.labels}` : `${d.id}`,
-            width: 1000,
-            height: 800,
-            // nodeStrength: -3
-        })  
-    }
-    
-    useEffect(() => {
-        console.log('chart', chart);
-        
-        if (data && chart) {
-            chartContainer.current.innerHTML = "";
-            chartContainer.current.appendChild(chart);
-        }
-    }, [chart]);
+    })
 
     if (isLoading) {
         return <div className='loadingContainer'>
@@ -88,7 +69,11 @@ const TopologyGrouped = () => {
         </div>
     }
 
-    return <div ref={chartContainer}></div>
+    return <ForceGraph
+        nodes={graph.nodes}
+        links={graph.links}
+        nodeGroup={d => d.group}
+        nodeTitle={d => d.labels ? `${d.labels}` : `${d.id}`} />
 }
 
 export default TopologyGrouped;
