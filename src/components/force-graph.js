@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import { uniq } from 'ramda'
 import { SettingOutlined } from '@ant-design/icons'
 
 const intern = value => {
@@ -26,17 +27,56 @@ const ForceGraph = ({
     nodeGroup, // given d in nodes, returns an (ordinal) value for color
     linkSource = ({source}) => source, // given d in links, returns a node identifier string
     linkTarget = ({target}) => target, // given d in links, returns a node identifier string
-    colors = d3.schemeTableau10, // an array of color strings, for the node groups
+    colors = d3.schemePaired, // an array of color strings, for the node groups
     invalidation, // when this promise resolves, stop the simulation
     skipAnimation,
-    isLinksVisible = true
+    isLinksVisible = true,
+    useVoronoi = false
 }) => {
     const linkContainerRef = useRef(null)
     const nodeContainerRef = useRef(null)
     const tooltipContainerRef = useRef(null)
+    const voronoiContainerRef = useRef(null)
     const svgRef = useRef(null)
 
+    const G = nodeGroup == null ? null : d3.map(nodes, nodeGroup).map(intern);
+  
+    // Compute default domains.
+    const nodeGroups = G ? d3.sort(G) : null;
+    const rainbowColoring = uniq(G).reduce((acc, cur) => {
+        return {
+            ...acc,
+            [cur]: d3.interpolateRainbow(Math.random())
+        }
+    }, {})
+
+    // Construct the scales.
+    const color = nodeGroup == null ? null : d3.scaleOrdinal(nodeGroups, colors);
+
     const [isLoading, setIsLoading] = useState(skipAnimation ? true : false)
+
+    const updateVoronoi = points => {
+        const particles = points.map(p => [p.x, p.y])
+        const delaunay = d3.Delaunay.from(particles);
+        const voronoi = delaunay.voronoi([-width / 2, -height / 2, width / 2, height / 2]);
+        
+        d3.select(nodeContainerRef.current)
+            .selectAll('.viz-node')
+            .attr('r' , 1)
+
+        d3.select(voronoiContainerRef.current)
+            .selectAll('.voronoi-cell')
+            .data(voronoi.cellPolygons())
+            .join('path')
+            .attr("d", (d) => 
+                  { 
+                     return d ? 
+                    ("M" + d.join("L") +
+                     "Z") : null; })
+            .attr("fill", (d,i) => rainbowColoring[G[i]])
+            .attr("stroke", "black")
+        
+    }
 
     const updateChart = () => {
         // Compute values.
@@ -45,20 +85,12 @@ const ForceGraph = ({
         const LT = d3.map(links, linkTarget).map(intern);
         if (nodeTitle === undefined) nodeTitle = (_, i) => N[i];
         const T = nodeTitle == null ? null : d3.map(nodes, nodeTitle);
-        const G = nodeGroup == null ? null : d3.map(nodes, nodeGroup).map(intern);
-        console.log('G', G);
         
         const W = typeof linkStrokeWidth !== "function" ? null : d3.map(links, linkStrokeWidth);
       
         // Replace the input nodes and links with mutable objects for the simulation.
         const mutableNodes = d3.map(nodes, (n, i) => ({id: N[i], ...n}));
         const mutableLinks = d3.map(links, (_, i) => ({source: LS[i], target: LT[i]}));
-  
-        // Compute default domains.
-        const nodeGroups = G ? d3.sort(G) : null;
-
-        // Construct the scales.
-        const color = nodeGroup == null ? null : d3.scaleOrdinal(nodeGroups, colors);
 
         // Construct the forces.
         const forceNode = d3.forceManyBody();
@@ -86,8 +118,11 @@ const ForceGraph = ({
                     ticked();
                     setIsLoading(false)
                 }
+                useVoronoi && updateVoronoi(mutableNodes)
             })
+            // .on("end", () => useVoronoi && updateVoronoi(mutableNodes));
             // .on("end", () => updateImages(svg));
+            // .on("end", () => readyCallback && readyCallback(mutableNodes));
   
         const link = d3.select(linkContainerRef.current)
             .selectAll("line")
@@ -210,6 +245,8 @@ const ForceGraph = ({
                 strokeOpacity={linkStrokeOpacity}
                 strokeWidth={linkStrokeWidth}
                 strokeLinecap='round' />
+            <g
+                ref={voronoiContainerRef} />
             <g
                 ref={nodeContainerRef}
                 className='nodes-container'

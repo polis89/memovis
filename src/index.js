@@ -6,7 +6,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
-  <BrowserRouter>
+  <BrowserRouter basename="/memovis">
     <React.StrictMode>
       <App />
     </React.StrictMode>

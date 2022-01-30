@@ -1,6 +1,7 @@
 {
   "name": "react-app",
   "version": "0.1.0",
+  "homepage": "/memovis/",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
