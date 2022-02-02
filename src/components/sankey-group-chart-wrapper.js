@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { useMemesData } from '../hooks/useMemesData';
 import SankeyChart from './sankey-chart'
 import * as d3 from 'd3'
@@ -10,6 +10,8 @@ const SankeyGroupChartWrapper = () => {
     const { isLoading, data = [] } = useMemesData();
     const groupedData = useMemo(() => data ? d3.groups(data, d => d.cluster) : null, [data]);
     const [selectedNode, setSelectedNode] = useState(null)
+    const leftColRef = useRef(null);
+    const leftColWidth = leftColRef.current && leftColRef.current.querySelector('.leftCol')?.offsetWidth
 
     const uniqFbGroups = groupedData ? uniq(pluck('fbGroup', data)) : []
 
@@ -53,9 +55,18 @@ const SankeyGroupChartWrapper = () => {
     }
 
 
-    return <div className='flexLayout'>
+    return <div className='flexLayout' ref={leftColRef}>
         <div className='leftCol'>
-            <div className='clusterPreview'/>
+            <div className='clusterPreview'  style={{width: leftColWidth}}>
+                {
+                    selectedNode ?
+                        <React.Fragment>{JSON.stringify(selectedNode)}</React.Fragment> :
+                        <div className='previewInfoText'>
+                            <div className='previewInfoText_title'>Cluster Preview</div>
+                            <div className='previewInfoText_desc'>Select a cluster for preview</div>
+                        </div>
+                }
+            </div>
         </div>
         <div className='rightCol'>
             <SankeyChart
