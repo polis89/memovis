@@ -1,15 +1,14 @@
 import React, { useEffect, useRef, useMemo } from 'react'
 import * as d3 from 'd3'
 import * as d3sankey from 'd3-sankey'
-import { pluck, flatten, uniq, clone, identity } from 'ramda'
+import { uniq, clone, identity } from 'ramda'
 
-const width = "1000"
 const minHeightProCluster = "20"
 const singleNodeHeight = "500"
 const margin = {
     left: 100,
     top: 0,
-    right: 100,
+    right: 180,
     bottom: 0
 }
 const linkColor = "source-target"
@@ -20,8 +19,10 @@ const SankeyChart = ({
     selectedNode,
     onNodeClick = identity
 }) => {
+    const chartContainer = useRef(null);
     const nodesContainer = useRef(null);
     const linksContainer = useRef(null);
+    const width = chartContainer.current && chartContainer.current.offsetWidth;
 
     const fullHeight = uniq(links.map(l => l.source)).length * minHeightProCluster
     
@@ -112,7 +113,7 @@ const SankeyChart = ({
     }, [filteredNodes, filteredLinks])
 
 
-    return <div>
+    return <div ref={chartContainer}>
         <svg
             width={width}
             height={fullHeight}

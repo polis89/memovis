@@ -4,10 +4,7 @@ import SankeyChart from './sankey-chart'
 import * as d3 from 'd3'
 import { pluck, flatten, uniq } from 'ramda'
 import { SettingOutlined } from '@ant-design/icons'
-
-const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
+import { capitalizeFirstLetter } from '../utils'
 
 const SankeyGroupChartWrapper = () => {
     const { isLoading, data = [] } = useMemesData();

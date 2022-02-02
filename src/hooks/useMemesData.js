@@ -10,7 +10,8 @@ export const useMemesData = () => {
             setIsLoading(false);
             setData(data.map(d => ({
                 ...d,
-                labels: JSON.parse(d.labels.replace(/\['(.*?)',/g, '["$1",'))
+                labels: JSON.parse(d.labels.replace(/\['(.*?)',/g, '["$1",')),
+                fbGroup: d.name.split('-').slice(0,-1).join('-')
             })));
         });
     }, [])

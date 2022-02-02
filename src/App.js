@@ -17,7 +17,7 @@ const App = () => {
 
   return (
     <Layout className="layout">
-      <Header>
+      <Header  style={{ position: 'fixed', zIndex: 1, width: '100%' }}>
         <Link to="/explore">
           <div className="logo" >
             MemoVis
@@ -61,7 +61,7 @@ const App = () => {
           </Menu.Item>
         </Menu>
       </Header>
-      <Content style={{ padding: '0 50px' }}>
+      <Content style={{ padding: '70px 50px 0' }}>
         <div className="site-layout-content">
           <Routes>
             <Route exact path="/" element={<Navigate to="/explore" />} />
