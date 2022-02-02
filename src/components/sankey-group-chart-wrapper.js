@@ -5,6 +5,7 @@ import * as d3 from 'd3'
 import { pluck, flatten, uniq } from 'ramda'
 import { SettingOutlined } from '@ant-design/icons'
 import { capitalizeFirstLetter } from '../utils'
+import { getClusterCharacteristic } from '../getClusterHaracteristic'
 
 const SankeyGroupChartWrapper = () => {
     const [refAquired, setRefAquired] = useState(false)
@@ -13,7 +14,9 @@ const SankeyGroupChartWrapper = () => {
     const [selectedNode, setSelectedNode] = useState(null)
     const leftColRef = useRef(null);
     const leftColWidth = leftColRef.current && leftColRef.current.querySelector('.leftCol')?.offsetWidth
-    console.log('leftColWidth', leftColWidth);
+
+    const clusterCharacteristic = useMemo(() => getClusterCharacteristic(groupedData, selectedNode), [groupedData, selectedNode])
+    console.log('clusterCharacteristic', clusterCharacteristic);
     
 
     const uniqFbGroups = groupedData ? uniq(pluck('fbGroup', data)) : []
@@ -59,15 +62,30 @@ const SankeyGroupChartWrapper = () => {
                     <SettingOutlined spin/>
                 </div>
             }
-            { !isLoading && <div className='clusterPreview'  style={{width: leftColWidth}}>
-                {
-                    selectedNode ?
-                        <React.Fragment>{selectedNode.id}</React.Fragment> :
-                        <div className='previewInfoText'>
-                            <div className='previewInfoText_title'>Cluster Preview</div>
-                            <div className='previewInfoText_desc'>Select a cluster for preview</div>
-                        </div>
-                }
+            { !isLoading && <div className='clusterPreviewContainer'  style={{width: leftColWidth}}>
+                <div className='clusterPreview'>
+                    {
+                        selectedNode ?
+                            <React.Fragment>{selectedNode.id}</React.Fragment> :
+                            <React.Fragment>
+                                <div className='previewInfoText'>
+                                    <div className='previewInfoText_title'>Cluster Preview</div>
+                                    <div className='previewInfoText_desc'>Select a cluster for preview</div>
+                                </div>
+                            </React.Fragment>
+                    }
+                </div>
+                <div className='clusterInfo'>
+                    { 
+                        selectedNode &&
+                        <React.Fragment>
+                            <div>Cluster Fingerprint: </div>
+                            {
+                                clusterCharacteristic.fingerprint.map(f => <div>{f}</div>)
+                            }
+                        </React.Fragment>
+                    }
+                </div>
             </div> }
         </div>
         <div className='rightCol'>

@@ -102,9 +102,11 @@
   flex-grow: 1;
 }
 
-.clusterPreview {
-  /* background: red; */
+.clusterPreviewContainer {
   position: fixed;
+}
+
+.clusterPreview {
   height: 400px;
   border: 2px dashed #aaa
 }
@@ -118,4 +120,8 @@
   left: 50%;
   white-space: nowrap;
   transform: translate(-50%,-50%);
+}
+
+.clusterInfo{ 
+  margin-top: 16px;
 }
