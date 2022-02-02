@@ -7,11 +7,14 @@ import { SettingOutlined } from '@ant-design/icons'
 import { capitalizeFirstLetter } from '../utils'
 
 const SankeyGroupChartWrapper = () => {
+    const [refAquired, setRefAquired] = useState(false)
     const { isLoading, data = [] } = useMemesData();
     const groupedData = useMemo(() => data ? d3.groups(data, d => d.cluster) : null, [data]);
     const [selectedNode, setSelectedNode] = useState(null)
     const leftColRef = useRef(null);
     const leftColWidth = leftColRef.current && leftColRef.current.querySelector('.leftCol')?.offsetWidth
+    console.log('leftColWidth', leftColWidth);
+    
 
     const uniqFbGroups = groupedData ? uniq(pluck('fbGroup', data)) : []
 
@@ -48,33 +51,33 @@ const SankeyGroupChartWrapper = () => {
         </div>
     }
 
-    if (!data || !groupedData) {
-        return <div className='loadingContainer'>
-            Error while loading the data
-        </div>
-    }
-
 
     return <div className='flexLayout' ref={leftColRef}>
         <div className='leftCol'>
-            <div className='clusterPreview'  style={{width: leftColWidth}}>
+            {
+                isLoading && <div className='loadingContainer'>
+                    <SettingOutlined spin/>
+                </div>
+            }
+            { !isLoading && <div className='clusterPreview'  style={{width: leftColWidth}}>
                 {
                     selectedNode ?
-                        <React.Fragment>{JSON.stringify(selectedNode)}</React.Fragment> :
+                        <React.Fragment>{selectedNode.id}</React.Fragment> :
                         <div className='previewInfoText'>
                             <div className='previewInfoText_title'>Cluster Preview</div>
                             <div className='previewInfoText_desc'>Select a cluster for preview</div>
                         </div>
                 }
-            </div>
+            </div> }
         </div>
         <div className='rightCol'>
-            <SankeyChart
+            { !isLoading && <SankeyChart
                 nodes={allNodes}
                 links={allLinks}
                 selectedNode={selectedNode}
                 onNodeClick={node => selectedNode && node.id === selectedNode.id ? setSelectedNode(null) : setSelectedNode(node)}
             />
+            }
         </div>
     </div>
 }

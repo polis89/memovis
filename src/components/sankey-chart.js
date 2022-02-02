@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import * as d3sankey from 'd3-sankey'
 import { uniq, clone, identity } from 'ramda'
@@ -22,6 +22,7 @@ const SankeyChart = ({
     const chartContainer = useRef(null);
     const nodesContainer = useRef(null);
     const linksContainer = useRef(null);
+    const [refAquired, setRefAquired] = useState(false)
     const width = chartContainer.current && chartContainer.current.offsetWidth;
 
     const fullHeight = uniq(links.map(l => l.source)).length * minHeightProCluster
@@ -109,8 +110,12 @@ const SankeyChart = ({
     }
 
     useEffect(() => {
-            updateSankeyChart(clone(filteredNodes),clone(filteredLinks), false);
-    }, [filteredNodes, filteredLinks])
+        setRefAquired(true)
+    }, [])
+
+    useEffect(() => {
+        width && updateSankeyChart(clone(filteredNodes),clone(filteredLinks), false);
+    }, [filteredNodes, filteredLinks, refAquired])
 
 
     return <div ref={chartContainer}>
