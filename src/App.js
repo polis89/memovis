@@ -7,6 +7,7 @@ import Topology from "./components/topology";
 import TopologyGrouped from "./components/topologyGrouped";
 import TopologyReduced from "./components/topologyReduced";
 import SankeyChartWrapper from "./components/sankey-chart-wrapper";
+import SankeyGroupChartWrapper from "./components/sankey-group-chart-wrapper";
 import Voronoi from "./components/voronoi";
 
 const { Header, Content, Footer } = Layout;
@@ -50,7 +51,12 @@ const App = () => {
           </Menu.Item>
           <Menu.Item key={'/sankey'}>
             <Link to="/sankey">
-              Sankey Chart
+              Sankey Cluster vs Labels
+            </Link>
+          </Menu.Item>
+          <Menu.Item key={'/sankeyGroup'}>
+            <Link to="/sankeyGroup">
+              Sankey Cluster vs FB Group
             </Link>
           </Menu.Item>
         </Menu>
@@ -65,6 +71,7 @@ const App = () => {
             <Route path="topologyGrouped" element={<TopologyGrouped />} />
             <Route path="voronoi" element={<Voronoi />} />
             <Route path="sankey" element={<SankeyChartWrapper />} />
+            <Route path="sankeyGroup" element={<SankeyGroupChartWrapper />} />
           </Routes>
         </div>
       </Content>

@@ -5,10 +5,6 @@ import * as d3 from 'd3'
 import { pluck, flatten, uniq } from 'ramda'
 import { SettingOutlined } from '@ant-design/icons'
 
-const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 const SankeyGroupChartWrapper = () => {
     const { isLoading, data = [] } = useMemesData();
     const groupedData = useMemo(() => data ? d3.groups(data, d => d.cluster) : null, [data]);
@@ -16,10 +12,10 @@ const SankeyGroupChartWrapper = () => {
 
     const uniqLabels = groupedData ? uniq(pluck(0, pluck('labels', flatten(pluck(1, groupedData))).flat())) : []
 
-    let clusterNodes = groupedData ? groupedData.map(d => ({id: `cluster_${d[0]}`, name: `Cluster ${d[0]}`})) : []
+    let clusterNodes = groupedData ? groupedData.map(d => ({id: `cluster_${d[0]}`, cluster_id: d[0]})) : []
     let labelNodes = uniqLabels.map(d=> ({
         id: `label_${d}`,
-        name: capitalizeFirstLetter(d).split('_').join(' ')
+        label: d
     }))
 
     const allNodes = [

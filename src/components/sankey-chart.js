@@ -15,89 +15,27 @@ const margin = {
 const linkColor = "source-target"
 
 const SankeyChart = ({
-    data,
-    selectedCluster,
-    selectedLabel,
-    onClusterClick = identity,
-    onLabelClick = identity
+    nodes,
+    links,
+    selectedNode,
+    onNodeClick = identity
 }) => {
     const nodesContainer = useRef(null);
     const linksContainer = useRef(null);
 
-    const fullHeight = data.length * minHeightProCluster
-
-    const uniqLabels = uniq(pluck(0, pluck('labels', flatten(pluck(1, data))).flat()))
-
-    let clusterNodes = data.map(d => ({id: `cluster_${d[0]}`, cluster_id: d[0]}))
-    let labelNodes = uniqLabels.map(d=> ({
-        id: `label_${d}`,
-        label: d
-    }))
-
-    const allNodes = [
-        ...clusterNodes,
-        ...labelNodes
-    ]
-
-    const allLinks = useMemo(() => data.map(cluster => {
-        const cluster_id =`cluster_${cluster[0]}`;
-        const cluster_size = cluster[1].length;
-        const cluster_labels = {};
-        let cluster_labels_sum = 0; 
-        cluster[1].forEach(document => {
-            document.labels.forEach(label => {
-                if (cluster_labels[label[0]]) {
-                    cluster_labels[label[0]] += label[1];
-                } else {
-                    cluster_labels[label[0]] = label[1];
-                }
-                cluster_labels_sum += label[1]
-            })
-        })
-        return Object.entries(cluster_labels).map(entry => {
-            return {
-                source: cluster_id,
-                cluster_id: cluster[0],
-                target: `label_${entry[0]}`,
-                label_id: entry[0],
-                value: 10 * cluster_size * entry[1] / cluster_labels_sum
-            }
-        })
-        }).flat(1),
-        [data]
-    )
-
-    if (selectedCluster) {
-        clusterNodes = clusterNodes.filter(n => n.cluster_id === selectedCluster)
-        labelNodes = uniq(
-            allLinks
-                .filter(l => l.cluster_id === selectedCluster)
-                .map(l => ({
-                    id: l.target,
-                    label: l.label_id 
-                })))
-    } else if (selectedLabel) {
-        labelNodes = labelNodes.filter(n => n.label === selectedLabel)
-    }
+    const fullHeight = uniq(links.map(l => l.source)).length * minHeightProCluster
     
-    const filteredNodes = [
-        ...clusterNodes,
-        ...labelNodes
-    ]
+    let filteredNodes = nodes;
+    let filteredLinks = links;
 
-    let filteredLinks = allLinks;
-    
-    if (selectedCluster) {
-        filteredLinks = allLinks.filter(l => l.cluster_id === selectedCluster)
-    } else if (selectedLabel) {
-        filteredLinks = allLinks.filter(l => l.label_id === selectedLabel)
+    if (selectedNode) {
+        filteredLinks = filteredLinks.filter(l => (l.source === selectedNode.id) || (l.target === selectedNode.id))
     }
-
         
-    const colorScale = d3.scaleOrdinal().range(d3.schemePaired).domain(allNodes.map(d => d.id));
+    const colorScale = d3.scaleOrdinal().range(d3.schemePaired).domain(nodes.map(d => d.id));
 
     const updateSankeyChart = (nodes, links) => {
-        const height = selectedCluster ? singleNodeHeight : fullHeight
+        const height = selectedNode ? singleNodeHeight : fullHeight
 
         const sankeyGenerator = d3sankey.sankey()
           .nodeId(d => d.id)
@@ -125,11 +63,7 @@ const SankeyChart = ({
             .attr('fill', d => colorScale(d.id))
             .attr('title', d => d.id)
             .on('click', (e, d) => {
-                if (d.cluster_id) {
-                    onClusterClick(d.cluster_id)
-                } else if (d.label) {
-                    onLabelClick(d.label)
-                }
+                onNodeClick(d)
             });
     
         d3.select(nodesContainer.current)
@@ -141,7 +75,7 @@ const SankeyChart = ({
             .attr('text-anchor', d => d.id.startsWith('cluster') ? 'end' : 'start')
             .attr("x", d => d.id.startsWith('cluster') ? d.x0 - 4 : d.x1 + 4)
             .attr("y", d => 4 + (d.y0 + d.y1) / 2)
-            .text(d => d.id.startsWith('cluster') ? d.id : d.id.substring(6, d.id.length))
+            .text(d => d.name)
             .each(function(d) {
                 const height = d3.select(this).node().getBoundingClientRect().height
                 d3.select(this).style('opacity', height > d.y1-d.y0 ? 0 : 1)
