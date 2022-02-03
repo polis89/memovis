@@ -108,6 +108,7 @@
 
 .clusterPreview {
   height: 400px;
+  overflow: hidden;
   border: 2px dashed #aaa
 }
 
@@ -124,4 +125,13 @@
 
 .clusterInfo{ 
   margin-top: 16px;
+  display: flex;
+}
+
+.clusterInfo > div {
+  flex-basis: 50%;
+}
+
+.ant-layout {
+  min-height: 100vh;
 }

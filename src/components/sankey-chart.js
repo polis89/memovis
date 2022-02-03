@@ -26,6 +26,7 @@ const SankeyChart = ({
     const width = chartContainer.current && chartContainer.current.offsetWidth;
 
     const fullHeight = uniq(links.map(l => l.source)).length * minHeightProCluster
+    const height = selectedNode ? singleNodeHeight : fullHeight
     
     let filteredNodes = nodes;
     let filteredLinks = links;
@@ -37,7 +38,6 @@ const SankeyChart = ({
     const colorScale = d3.scaleOrdinal().range(d3.schemePaired).domain(nodes.map(d => d.id));
 
     const updateSankeyChart = (nodes, links) => {
-        const height = selectedNode ? singleNodeHeight : fullHeight
 
         const sankeyGenerator = d3sankey.sankey()
           .nodeId(d => d.id)
@@ -114,15 +114,15 @@ const SankeyChart = ({
     }, [])
 
     useEffect(() => {
-        width && updateSankeyChart(clone(filteredNodes),clone(filteredLinks), false);
+        width && updateSankeyChart(clone(filteredNodes),clone(filteredLinks));
     }, [filteredNodes, filteredLinks, refAquired])
 
 
     return <div ref={chartContainer}>
         <svg
             width={width}
-            height={fullHeight}
-            viewBox={[0,0,width,fullHeight]}
+            height={height}
+            viewBox={[0,0,width,height]}
             style={{
                 maxWidth: '100%',
                 height: 'intrinsic'

@@ -6,9 +6,13 @@ import { pluck, flatten, uniq } from 'ramda'
 import { SettingOutlined } from '@ant-design/icons'
 import { capitalizeFirstLetter } from '../utils'
 import { getClusterCharacteristic } from '../getClusterHaracteristic'
+import Box from '@mui/material/Box';
+import ImageListItem from '@mui/material/ImageListItem';
+import Masonry from '@mui/lab/Masonry';
 
 const SankeyGroupChartWrapper = () => {
     const [refAquired, setRefAquired] = useState(false)
+    const [hoveredImage, setHoveredImage] = useState(null)
     const { isLoading, data = [] } = useMemesData();
     const groupedData = useMemo(() => data ? d3.groups(data, d => d.cluster) : null, [data]);
     const [selectedNode, setSelectedNode] = useState(null)
@@ -16,8 +20,6 @@ const SankeyGroupChartWrapper = () => {
     const leftColWidth = leftColRef.current && leftColRef.current.querySelector('.leftCol')?.offsetWidth
 
     const clusterCharacteristic = useMemo(() => getClusterCharacteristic(groupedData, selectedNode), [groupedData, selectedNode])
-    console.log('clusterCharacteristic', clusterCharacteristic);
-    
 
     const uniqFbGroups = groupedData ? uniq(pluck('fbGroup', data)) : []
 
@@ -66,7 +68,22 @@ const SankeyGroupChartWrapper = () => {
                 <div className='clusterPreview'>
                     {
                         selectedNode ?
-                            <React.Fragment>{selectedNode.id}</React.Fragment> :
+                            <React.Fragment>
+                                <Box sx={{ width: 550, height: 400, overflowY: 'scroll' }}>
+                                    <Masonry columns={3} spacing={1}>
+                                        {clusterCharacteristic.images.map((item, i) => (
+                                            <ImageListItem key={i}>
+                                                <img
+                                                    src={`${item.filename}`}
+                                                    loading="lazy"
+                                                    onMouseOver={() => setHoveredImage(item)}
+                                                    onMouseLeave={() => setHoveredImage(null)}
+                                                />
+                                            </ImageListItem>
+                                        ))}
+                                    </Masonry>
+                                </Box>                                
+                            </React.Fragment> :
                             <React.Fragment>
                                 <div className='previewInfoText'>
                                     <div className='previewInfoText_title'>Cluster Preview</div>
@@ -79,10 +96,23 @@ const SankeyGroupChartWrapper = () => {
                     { 
                         selectedNode &&
                         <React.Fragment>
-                            <div>Cluster Fingerprint: </div>
-                            {
-                                clusterCharacteristic.fingerprint.map(f => <div>{f}</div>)
-                            }
+                            <div>
+                                <div>{selectedNode.name} Fingerprint: </div>
+                                {
+                                    clusterCharacteristic.fingerprint.map(f => <div>{f}</div>)
+                                }
+                            </div>
+                            <div>
+                                {
+                                    hoveredImage && <React.Fragment>
+                                        <div>{hoveredImage.name} Fingerprint: </div>
+                                        {
+                                            hoveredImage.fingerprints.map(f => <div>{f}</div>)
+                                        }
+                                        <div>Distance: {hoveredImage.distance}</div>
+                                    </React.Fragment>
+                                }
+                            </div>
                         </React.Fragment>
                     }
                 </div>
