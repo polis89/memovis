@@ -121,6 +121,7 @@ const SankeyComparison = () => {
                                                 <img
                                                     src={`${item.filename}`}
                                                     loading="lazy"
+                                                    data-distance={item.distance}
                                                 />
                                             </ImageListItem>
                                         ))}
@@ -155,7 +156,9 @@ const SankeyComparison = () => {
                     links={allLinksReversed}
                     selectedNode={selectedNodeRight}
                     isReversed={true}
+                    clusterNames={clusterMapping}
                     onNodeClick={node => selectedNodeRight && node.id === selectedNodeRight.id ? setSelectedNodeRight(null) : setSelectedNodeRight(node)}
+                    onNameClick={handleNameClick}
                 />
             </div>
             <div className='clusterPreviewCont'>
@@ -171,6 +174,7 @@ const SankeyComparison = () => {
                                                 <img
                                                     src={`${item.filename}`}
                                                     loading="lazy"
+                                                    data-distance={item.distance}
                                                 />
                                             </ImageListItem>
                                         ))}
