@@ -2,6 +2,10 @@
   text-align: center;
 }
 
+body {
+  overflow-y: scroll;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -134,4 +138,35 @@
 
 .ant-layout {
   min-height: 100vh;
+}
+
+.comparisonContainer {
+  display: flex;
+}
+
+.halfComparison {
+  flex-basis: 50%;
+  flex-shrink: 0;
+  flex-grow: 0;
+  display: flex;
+}
+
+.halfComparison .clusterPreviewCont{
+  flex-basis: 340px;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.halfComparison .sankeyContainer{
+  flex-grow: 1;
+}
+
+.MuiMasonry-root li:first-child {
+  border: red 2px solid;
+}
+
+.resetContainer {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
 }

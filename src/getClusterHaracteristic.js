@@ -1,13 +1,19 @@
 import { distance } from 'mathjs'
-import { sortBy, prop } from 'ramda'
+import { sortBy, prop, find } from 'ramda'
 
 export const getClusterCharacteristic = (groupedData, cluster) => {
     let images;
-    if (groupedData?.[cluster?.index]?.[0] === cluster?.id.split('_')[1]) {
-        images = groupedData?.[cluster?.index]?.[1]
+    if (cluster?.id.startsWith("fbgroup_")) {
+        images = groupedData?.map(d => d[1].filter(i => i.fbGroup === cluster.id.slice(8))).flat()
+    } else {
+        const clusterId = cluster?.id.split('_')[1]
+        images = groupedData ? find(d => d[0] === clusterId, groupedData) : null
+        images = images?.[1]
     }
     if (!images) {
-        return null
+        return {
+            images: []
+        }
     }
     const sum = images.reduce((acc,cur) => {
         if (!acc) {

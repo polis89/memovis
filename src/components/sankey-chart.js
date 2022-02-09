@@ -1,31 +1,36 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import * as d3sankey from 'd3-sankey'
-import { uniq, clone, identity } from 'ramda'
+import { uniq, clone, identity, flatten } from 'ramda'
 
 const minHeightProCluster = "20"
 const singleNodeHeight = "500"
-const margin = {
-    left: 100,
-    top: 0,
-    right: 180,
-    bottom: 0
-}
 const linkColor = "source-target"
 
 const SankeyChart = ({
     nodes,
     links,
     selectedNode,
+    isReversed,
+    clusterNames,
+    onNameClick = identity,
     onNodeClick = identity
 }) => {
+    const margin = {
+        left: isReversed ? 180 : 100,
+        top: 4,
+        right: isReversed ? 100 : 180,
+        bottom: 4
+    }
     const chartContainer = useRef(null);
     const nodesContainer = useRef(null);
     const linksContainer = useRef(null);
     const [refAquired, setRefAquired] = useState(false)
     const width = chartContainer.current && chartContainer.current.offsetWidth;
+    console.log('width', width);
+    
 
-    const fullHeight = uniq(links.map(l => l.source)).length * minHeightProCluster
+    const fullHeight = uniq(links.map(l => isReversed ? l.target : l.source)).length * minHeightProCluster
     const height = selectedNode ? singleNodeHeight : fullHeight
     
     let filteredNodes = nodes;
@@ -33,18 +38,25 @@ const SankeyChart = ({
 
     if (selectedNode) {
         filteredLinks = filteredLinks.filter(l => (l.source === selectedNode.id) || (l.target === selectedNode.id))
+        filteredNodes = filteredNodes.filter(n => flatten(filteredLinks.map(l => [l.source, l.target])).includes(n.id))
     }
         
     const colorScale = d3.scaleOrdinal().range(d3.schemePaired).domain(nodes.map(d => d.id));
 
     const updateSankeyChart = (nodes, links) => {
-
         const sankeyGenerator = d3sankey.sankey()
           .nodeId(d => d.id)
           .nodeAlign(d3sankey.sankeyJustify)
+          .nodeSort((a,b) => {
+              if (a.id.startsWith('cluster') && b.id.startsWith('cluster')) {
+                  const clusterA = parseInt(a.id.slice(8));
+                  const clusterB = parseInt(b.id.slice(8));
+                  return clusterA > clusterB
+              }
+              return 0
+          })
           .nodeWidth(15)
-        //   .nodePadding(isSingleNode ? 3 : 0)
-          .nodePadding(0)
+          .nodePadding(selectedNode ? 8 : 0)
           .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]]);
     
         sankeyGenerator({nodes, links});
@@ -74,13 +86,32 @@ const SankeyChart = ({
             .join("text")
             .style('font-size', 10)
             .style('font-weight', 400)
-            .attr('text-anchor', d => d.id.startsWith('cluster') ? 'end' : 'start')
-            .attr("x", d => d.id.startsWith('cluster') ? d.x0 - 4 : d.x1 + 4)
+            .attr('text-anchor', d => {
+                if (isReversed) {
+                    return d.id.startsWith('cluster') ? 'start' : 'end';
+                } else {
+                    return d.id.startsWith('cluster') ? 'end' : 'start';
+                }
+            })
+            .attr('x', d => {
+                if (isReversed) {
+                    return d.id.startsWith('cluster') ? d.x1 + 4 : d.x0 - 4
+                } else {
+                    return d.id.startsWith('cluster') ? d.x0 - 4 : d.x1 + 4
+                }
+            })
             .attr("y", d => 4 + (d.y0 + d.y1) / 2)
-            .text(d => d.name)
+            .text(d => clusterNames?.[d.id] || d.name)
+            .style('cursor', d => d.id.startsWith('cluster') ? 'pointer' : 'default')
             .each(function(d) {
                 const height = d3.select(this).node().getBoundingClientRect().height
-                d3.select(this).style('opacity', height > d.y1-d.y0 ? 0 : 1)
+                const pad = selectedNode ? 8 : 0
+                d3.select(this).style('opacity', (height - pad) > d.y1-d.y0 ? 0 : 1)
+            })
+            .on('click', (e, d) => {
+                if (d.id.startsWith('cluster')) {
+                    onNameClick(d)
+                }
             })
     
         d3.select(linksContainer.current)
@@ -114,7 +145,7 @@ const SankeyChart = ({
     }, [])
 
     useEffect(() => {
-        width && updateSankeyChart(clone(filteredNodes),clone(filteredLinks));
+        width && filteredNodes.length > 0 && filteredLinks.length > 0 && updateSankeyChart(clone(filteredNodes),clone(filteredLinks));
     }, [filteredNodes, filteredLinks, refAquired])
 
 
