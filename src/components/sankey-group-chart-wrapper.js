@@ -92,30 +92,6 @@ const SankeyGroupChartWrapper = () => {
                             </React.Fragment>
                     }
                 </div>
-                <div className='clusterInfo'>
-                    { 
-                        selectedNode &&
-                        <React.Fragment>
-                            <div>
-                                <div>{selectedNode.name} Fingerprint: </div>
-                                {
-                                    clusterCharacteristic.fingerprint.map(f => <div>{f}</div>)
-                                }
-                            </div>
-                            <div>
-                                {
-                                    hoveredImage && <React.Fragment>
-                                        <div>{hoveredImage.name} Fingerprint: </div>
-                                        {
-                                            hoveredImage.fingerprints.map(f => <div>{f}</div>)
-                                        }
-                                        <div>Distance: {hoveredImage.distance}</div>
-                                    </React.Fragment>
-                                }
-                            </div>
-                        </React.Fragment>
-                    }
-                </div>
             </div> }
         </div>
         <div className='rightCol'>

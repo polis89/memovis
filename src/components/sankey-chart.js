@@ -3,8 +3,8 @@ import * as d3 from 'd3'
 import * as d3sankey from 'd3-sankey'
 import { uniq, clone, identity, flatten } from 'ramda'
 
-const minHeightProCluster = "20"
-const singleNodeHeight = "500"
+const minHeightProCluster = "15"
+const singleNodeHeight = "800"
 const linkColor = "source-target"
 
 const SankeyChart = ({
@@ -17,9 +17,9 @@ const SankeyChart = ({
     onNodeClick = identity
 }) => {
     const margin = {
-        left: isReversed ? 180 : 100,
+        left: isReversed ? 5 : 100,
         top: 4,
-        right: isReversed ? 100 : 180,
+        right: isReversed ? 100 : 5,
         bottom: 4
     }
     const chartContainer = useRef(null);
@@ -47,14 +47,14 @@ const SankeyChart = ({
         const sankeyGenerator = d3sankey.sankey()
           .nodeId(d => d.id)
           .nodeAlign(d3sankey.sankeyJustify)
-          .nodeSort((a,b) => {
-              if (a.id.startsWith('cluster') && b.id.startsWith('cluster')) {
-                  const clusterA = parseInt(a.id.slice(8));
-                  const clusterB = parseInt(b.id.slice(8));
-                  return clusterA > clusterB
-              }
-              return 0
-          })
+        //   .nodeSort((a,b) => {
+        //       if (a.id.startsWith('cluster') && b.id.startsWith('cluster')) {
+        //           const clusterA = parseInt(a.id.slice(8));
+        //           const clusterB = parseInt(b.id.slice(8));
+        //           return clusterA > clusterB
+        //       }
+        //       return 0
+        //   })
           .nodeWidth(15)
           .nodePadding(selectedNode ? 8 : 0)
           .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]]);
@@ -88,16 +88,16 @@ const SankeyChart = ({
             .style('font-weight', 400)
             .attr('text-anchor', d => {
                 if (isReversed) {
-                    return d.id.startsWith('cluster') ? 'start' : 'end';
+                    return 'start';
                 } else {
-                    return d.id.startsWith('cluster') ? 'end' : 'start';
+                    return 'end';
                 }
             })
             .attr('x', d => {
                 if (isReversed) {
-                    return d.id.startsWith('cluster') ? d.x1 + 4 : d.x0 - 4
+                    return d.x1 + 4;
                 } else {
-                    return d.id.startsWith('cluster') ? d.x0 - 4 : d.x1 + 4
+                    return d.x0 - 4;
                 }
             })
             .attr("y", d => 4 + (d.y0 + d.y1) / 2)
@@ -157,9 +157,9 @@ const SankeyChart = ({
             style={{
                 maxWidth: '100%',
                 height: 'intrinsic'
-            }}>
-            <g className='nodes-container' ref={nodesContainer}></g>        
-            <g className='link-container' ref={linksContainer} fill='none' strokeOpacity='0.5'></g>        
+            }}>   
+            <g className='link-container' ref={linksContainer} fill='none' strokeOpacity='0.5'></g>   
+            <g className='nodes-container' ref={nodesContainer}></g>          
         </svg>
     </div>
 }

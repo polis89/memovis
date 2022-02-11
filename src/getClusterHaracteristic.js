@@ -15,27 +15,10 @@ export const getClusterCharacteristic = (groupedData, cluster) => {
             images: []
         }
     }
-    const sum = images.reduce((acc,cur) => {
-        if (!acc) {
-            return cur.fingerprints
-        } else {
-            return cur.fingerprints.map((f,i) => f + acc[i])
-        }
-    }, null)
-
-    const clusterFingerprint = sum.map(f => f / images.length)
-
-    images = images.map(i => {
-        return {
-            ...i,
-            distance: distance(clusterFingerprint, i.fingerprints)
-        }
-    })
 
     images = sortBy(prop('distance'), images)
 
     return {
-        fingerprint: clusterFingerprint,
         images: images.slice(0, 10)
     }
 }
